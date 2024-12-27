@@ -43,6 +43,11 @@ static int read_int32(int client_socket) {
     return htonl(n);
 }
 
+static void send_int16(int client_socket, short n) {
+    n = htons(n);
+    full_write(client_socket, &n, sizeof(n));
+}
+
 static void send_int32(int client_socket, int n) {
     n = htonl(n);
     full_write(client_socket, &n, sizeof(n));
@@ -95,6 +100,7 @@ public:
             int correlation_id = htonl(*reinterpret_cast<int *>(buffer.data() + 4));
             send_int32(client_socket, 0);
             send_int32(client_socket, correlation_id);
+            send_int16(client_socket, 35);
 
             close(client_socket);
         }
