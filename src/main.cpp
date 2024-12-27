@@ -1,16 +1,51 @@
 #include <arpa/inet.h>
 #include <cerrno>
+#include <cstddef>
 #include <cstring>
 #include <netinet/in.h>
+#include <stdexcept>
 #include <sys/socket.h>
 #include <system_error>
 #include <unistd.h>
+#include <vector>
 
 namespace kafka {
 
+static void full_read(int client_socket, void *buffer, std::size_t nbytes) {
+    char *p = static_cast<char *>(buffer);
+    while (nbytes > 0) {
+        ssize_t nr = read(client_socket, p, nbytes);
+        if (nr < 0) {
+            throw std::system_error(errno, std::system_category(), "read");
+        } else if (nr == 0) {
+            throw std::runtime_error("incomplete read");
+        }
+        p += nr;
+        nbytes -= nr;
+    }
+}
+
+static void full_write(int client_socket, const void *buffer, std::size_t nbytes) {
+    const char *p = static_cast<const char *>(buffer);
+    while (nbytes > 0) {
+        ssize_t nw = write(client_socket, p, nbytes);
+        if (nw < 0) {
+            throw std::system_error(errno, std::system_category(), "write");
+        }
+        p += nw;
+        nbytes -= nw;
+    }
+}
+
+static int read_int32(int client_socket) {
+    int n;
+    full_read(client_socket, &n, sizeof(n));
+    return htonl(n);
+}
+
 static void send_int32(int client_socket, int n) {
     n = htonl(n);
-    write(client_socket, &n, sizeof(n));
+    full_write(client_socket, &n, sizeof(n));
 }
 
 class Server {
@@ -53,10 +88,13 @@ public:
                 throw std::system_error(errno, std::system_category(), "accept");
             }
 
-            char buffer[1024];
-            read(client_socket, buffer, sizeof(buffer));
+            int message_size = read_int32(client_socket);
+            std::vector<char> buffer(message_size);
+            full_read(client_socket, buffer.data(), message_size);
+
+            int correlation_id = htonl(*reinterpret_cast<int *>(buffer.data() + 4));
             send_int32(client_socket, 0);
-            send_int32(client_socket, 7);
+            send_int32(client_socket, correlation_id);
 
             close(client_socket);
         }
