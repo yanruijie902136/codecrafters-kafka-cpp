@@ -8,6 +8,11 @@
 
 namespace kafka {
 
+static void send_int32(int client_socket, int n) {
+    n = htonl(n);
+    write(client_socket, &n, sizeof(n));
+}
+
 class Server {
 public:
     Server() {
@@ -47,6 +52,11 @@ public:
                 }
                 throw std::system_error(errno, std::system_category(), "accept");
             }
+
+            char buffer[1024];
+            read(client_socket, buffer, sizeof(buffer));
+            send_int32(client_socket, 0);
+            send_int32(client_socket, 7);
 
             close(client_socket);
         }
