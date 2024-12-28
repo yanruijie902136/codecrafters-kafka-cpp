@@ -52,6 +52,7 @@ static void serve_client(Client client) {
         } else {
             response.error_code() = ErrorCode::NONE;
             response.api_keys().emplace_back(ApiKey::API_VERSIONS, 0, 4);
+            response.api_keys().emplace_back(ApiKey::DESCRIBE_TOPIC_PARTITIONS, 0, 0);
         }
 
         client.write_response(ResponseHeader(request_header.correlation_id()), response);

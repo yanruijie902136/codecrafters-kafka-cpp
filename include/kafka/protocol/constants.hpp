@@ -8,6 +8,7 @@ namespace kafka {
 // Numeric codes that represent different types of requests.
 enum class ApiKey : INT16 {
     API_VERSIONS = 18,
+    DESCRIBE_TOPIC_PARTITIONS = 75,
 };
 
 // Numeric codes that indicate what problem occurred on the server.
