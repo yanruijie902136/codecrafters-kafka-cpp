@@ -56,9 +56,6 @@ std::vector<INT32> ClusterMetadata::get_partition_ids(const UUID &topic_id) cons
 ClusterMetadata::ClusterMetadata() {
     for (const auto &record_batch : read_record_batches("__cluster_metadata", 0)) {
         for (const auto &record : record_batch.records()) {
-            if (record.value().empty()) {
-                continue;
-            }
             ReadableBuffer rb(record.value());
             INT8 frame_version = read_int8(rb);
             INT8 type = read_int8(rb);

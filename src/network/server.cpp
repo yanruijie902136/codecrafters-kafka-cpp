@@ -68,7 +68,8 @@ static FetchableTopicResponse make_fetchable_topic_response(const FetchTopic &fe
     const auto &cluster_metadata = ClusterMetadata::get_instance();
     try {
         auto topic_name = cluster_metadata.get_topic_name(topic_id);
-        for (INT32 partition_index : cluster_metadata.get_partition_ids(topic_id)) {
+        for (const auto &fetch_partition : fetch_topic.partitions()) {
+            INT32 partition_index = fetch_partition.partition();
             res.partitions().push_back(make_partition_data(topic_name, partition_index));
         }
     } catch (...) {
