@@ -123,9 +123,6 @@ public:
 
     class PartitionData {
     public:
-        PartitionData(INT32 partition_index, ErrorCode error_code)
-            : partition_index_(partition_index), error_code_(error_code) {}
-
         // Writes this `PartitionData` to a byte stream.
         void write(IWritable &writable) const {
             write_int32(writable, partition_index_);
@@ -139,6 +136,18 @@ public:
             write_tagged_fields(writable);
         }
 
+        INT32 &partition_index() {
+            return partition_index_;
+        }
+
+        ErrorCode &error_code() {
+            return error_code_;
+        }
+
+        COMPACT_ARRAY<RecordBatch> &records() {
+            return records_;
+        }
+
     private:
         INT32 partition_index_;
         ErrorCode error_code_;
@@ -147,7 +156,7 @@ public:
         INT64 log_start_offset_;
         COMPACT_ARRAY<AbortedTransaction> aborted_transactions_;
         INT32 preferred_read_replica_;
-        COMPACT_ARRAY<Record> records_;
+        COMPACT_ARRAY<RecordBatch> records_;
     };
 
     class FetchableTopicResponse {

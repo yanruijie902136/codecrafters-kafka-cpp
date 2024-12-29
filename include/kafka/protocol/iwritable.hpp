@@ -34,6 +34,9 @@ void write_int32(IWritable &writable, INT32 n);
 // Writes an INT64 to a byte stream.
 void write_int64(IWritable &writable, INT64 n);
 
+// Writes an UINT32 to a byte stream.
+void write_uint32(IWritable &writable, UINT32 n);
+
 // Writes a VARINT to a byte stream.
 void write_varint(IWritable &writable, VARINT n);
 
@@ -54,6 +57,15 @@ void write_compact_nullable_string(IWritable &writable, const COMPACT_NULLABLE_S
 
 // Writes a BYTES to a byte stream.
 void write_bytes(IWritable &writable, const BYTES &bytes);
+
+// Writes an ARRAY to a byte stream.
+template<typename T>
+inline void write_array(IWritable &writable, const ARRAY<T> &arr) {
+    write_int32(writable, arr.size());
+    for (const T &object : arr) {
+        object.write(writable);
+    }
+}
 
 // Writes a COMPACT_ARRAY to a byte stream.
 template<typename T>

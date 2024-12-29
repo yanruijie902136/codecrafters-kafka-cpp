@@ -1,8 +1,5 @@
 #include "kafka/protocol/ireadable.hpp"
-#include "kafka/protocol/types.hpp"
 #include "kafka/utils.hpp"
-
-#include <stdexcept>
 
 namespace kafka {
 
@@ -95,7 +92,7 @@ void read_tagged_fields(IReadable &readable) {
     char c;
     readable.read(&c, sizeof(c));
     if (c != 0x00) {
-        throw std::runtime_error("unexpected tagged fields");
+        throw_runtime_error("unexpected tagged fields");
     }
 }
 

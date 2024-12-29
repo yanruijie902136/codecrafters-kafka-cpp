@@ -8,6 +8,7 @@
 #include "kafka/metadata/cluster_metadata.hpp"
 #include "kafka/network/client.hpp"
 #include "kafka/protocol/constants.hpp"
+#include "kafka/protocol/types.hpp"
 #include "kafka/utils.hpp"
 
 #include <cerrno>
@@ -51,17 +52,30 @@ using FetchTopic = FetchRequest::FetchTopic;
 using FetchableTopicResponse = FetchResponse::FetchableTopicResponse;
 using PartitionData = FetchResponse::PartitionData;
 
+static PartitionData make_partition_data(const std::string &topic_name, INT32 partition_index) {
+    PartitionData partition_data;
+    partition_data.partition_index() = partition_index;
+    partition_data.error_code() = ErrorCode::NONE;
+    partition_data.records() = read_record_batches(topic_name, partition_index);
+    return partition_data;
+}
+
 static FetchableTopicResponse make_fetchable_topic_response(const FetchTopic &fetch_topic) {
     FetchableTopicResponse res;
-    res.topic_id() = fetch_topic.topic_id();
+    UUID topic_id = fetch_topic.topic_id();
+    res.topic_id() = topic_id;
 
-    const ClusterMetadata &cluster_metadata = ClusterMetadata::get_instance();
+    const auto &cluster_metadata = ClusterMetadata::get_instance();
     try {
-        for (INT32 partition_id : cluster_metadata.get_partition_ids(fetch_topic.topic_id())) {
-            res.partitions().emplace_back(partition_id, ErrorCode::NONE);
+        auto topic_name = cluster_metadata.get_topic_name(topic_id);
+        for (INT32 partition_index : cluster_metadata.get_partition_ids(topic_id)) {
+            res.partitions().push_back(make_partition_data(topic_name, partition_index));
         }
     } catch (...) {
-        res.partitions().emplace_back(0, ErrorCode::UNKNOWN_TOPIC_ID);
+        PartitionData partition_data;
+        partition_data.partition_index() = 0;
+        partition_data.error_code() = ErrorCode::UNKNOWN_TOPIC_ID;
+        res.partitions().push_back(std::move(partition_data));
     }
 
     return res;

@@ -26,6 +26,11 @@ public:
         index_ += nbytes;
     }
 
+    // Returns the underlying byte buffer.
+    const BYTES &buffer() const {
+        return bytes_;
+    }
+
 private:
     BYTES bytes_;
     std::size_t index_;

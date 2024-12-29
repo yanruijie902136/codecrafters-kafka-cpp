@@ -20,11 +20,15 @@ void write_int16(IWritable &writable, INT16 n) {
 }
 
 void write_int32(IWritable &writable, INT32 n) {
+    write_uint32(writable, n);
+}
+
+void write_int64(IWritable &writable, INT64 n) {
     n = to_network_byte_order(n);
     writable.write(&n, sizeof(n));
 }
 
-void write_int64(IWritable &writable, INT64 n) {
+void write_uint32(IWritable &writable, UINT32 n) {
     n = to_network_byte_order(n);
     writable.write(&n, sizeof(n));
 }
@@ -43,7 +47,7 @@ void write_varlong(IWritable &writable, VARLONG n) {
 
 void write_unsigned_varlong(IWritable &writable, UNSIGNED_VARLONG n) {
     do {
-        char c = n & 0x7F;
+        unsigned char c = n & 0x7F;
         if ((n >>= 7) > 0) {
             c |= 0x80;
         }
