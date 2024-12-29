@@ -20,17 +20,21 @@ public:
             partition_ = read_int32(readable);
             current_leader_epoch_ = read_int32(readable);
             fetch_offset_ = read_int64(readable);
-            last_fetched_epoch_ = read_int64(readable);
+            last_fetched_epoch_ = read_int32(readable);
             log_start_offset_ = read_int64(readable);
             partition_max_bytes_ = read_int32(readable);
             read_tagged_fields(readable);
+        }
+
+        const INT32 &partition() const {
+            return partition_;
         }
 
     private:
         INT32 partition_;
         INT32 current_leader_epoch_;
         INT64 fetch_offset_;
-        INT64 last_fetched_epoch_;
+        INT32 last_fetched_epoch_;
         INT64 log_start_offset_;
         INT32 partition_max_bytes_;
     };
@@ -42,6 +46,14 @@ public:
             topic_id_ = read_uuid(readable);
             partitions_ = read_compact_array<FetchPartition>(readable);
             read_tagged_fields(readable);
+        }
+
+        const UUID &topic_id() const {
+            return topic_id_;
+        }
+
+        const COMPACT_ARRAY<FetchPartition> &partitions() const {
+            return partitions_;
         }
 
     private:
@@ -77,6 +89,10 @@ public:
         read_tagged_fields(readable);
     }
 
+    const COMPACT_ARRAY<FetchTopic> &topics() const {
+        return topics_;
+    }
+
 private:
     INT32 max_wait_ms_;
     INT32 min_bytes_;
@@ -107,6 +123,9 @@ public:
 
     class PartitionData {
     public:
+        PartitionData(INT32 partition_index, ErrorCode error_code)
+            : partition_index_(partition_index), error_code_(error_code) {}
+
         // Writes this `PartitionData` to a byte stream.
         void write(IWritable &writable) const {
             write_int32(writable, partition_index_);
@@ -138,6 +157,14 @@ public:
             write_uuid(writable, topic_id_);
             write_compact_array(writable, partitions_);
             write_tagged_fields(writable);
+        }
+
+        UUID &topic_id() {
+            return topic_id_;
+        }
+
+        COMPACT_ARRAY<PartitionData> &partitions() {
+            return partitions_;
         }
 
     private:

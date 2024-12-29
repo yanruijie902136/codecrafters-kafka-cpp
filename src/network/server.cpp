@@ -55,6 +55,16 @@ static std::unique_ptr<FetchResponse> handle_fetch(const RequestMessage &request
     response.throttle_time_ms() = 0;
     response.session_id() = 0;
 
+    for (const auto &fetch_topic : request->topics()) {
+        using FetchableTopicResponse = FetchResponse::FetchableTopicResponse;
+
+        FetchableTopicResponse fetch_topic_response;
+        fetch_topic_response.topic_id() = fetch_topic.topic_id();
+        fetch_topic_response.partitions().emplace_back(0, ErrorCode::UNKNOWN_TOPIC_ID);
+
+        response.responses().push_back(std::move(fetch_topic_response));
+    }
+
     return std::make_unique<FetchResponse>(std::move(response));
 }
 
