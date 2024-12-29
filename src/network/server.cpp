@@ -1,11 +1,16 @@
 #include "kafka/network/server.hpp"
+#include "kafka/message/abstract.hpp"
+#include "kafka/message/api_versions.hpp"
+#include "kafka/message/describe_topic_partitions.hpp"
 #include "kafka/message/headers.hpp"
+#include "kafka/message/messages.hpp"
 #include "kafka/network/client.hpp"
 #include "kafka/protocol/constants.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
+#include <memory>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <system_error>
@@ -41,21 +46,56 @@ Server::Server() {
     }
 }
 
+static std::unique_ptr<AbstractResponse> handle_api_versions(const RequestMessage &request_message) {
+    const ApiVersionsRequest *request = request_message.request<ApiVersionsRequest>();
+
+    ApiVersionsResponse response;
+    if (request_message.header().request_api_version() != 4) {
+        response.error_code() = ErrorCode::UNSUPPORTED_VERSION;
+    } else {
+        response.error_code() = ErrorCode::NONE;
+        response.api_keys().emplace_back(ApiKey::API_VERSIONS, 0, 4);
+        response.api_keys().emplace_back(ApiKey::DESCRIBE_TOPIC_PARTITIONS, 0, 0);
+    }
+    response.throttle_time_ms() = 0;
+
+    return std::make_unique<ApiVersionsResponse>(std::move(response));
+}
+
+static std::unique_ptr<AbstractResponse> handle_describe_topic_partitions(const RequestMessage &request_message) {
+    const DescribeTopicPartitionsRequest *request = request_message.request<DescribeTopicPartitionsRequest>();
+
+    DescribeTopicPartitionsResponse response;
+    response.throttle_time_ms() = 0;
+    for (const auto &topic_request : request->topics()) {
+        using ResponseTopic = DescribeTopicPartitionsResponse::ResponseTopic;
+
+        ResponseTopic response_topic;
+        response_topic.error_code() = ErrorCode::UNKNOWN_TOPIC_OR_PARTITION;
+        response_topic.name() = topic_request.name();
+
+        response.topics().push_back(std::move(response_topic));
+    }
+
+    return std::make_unique<DescribeTopicPartitionsResponse>(std::move(response));
+}
+
 static void serve_client(Client client) {
     for ( ; ; ) {
-        auto [request_header, request] = client.read_request();
+        auto request_message = client.read_request();
 
-        ApiVersionsResponse response;
-        response.throttle_time_ms() = 0;
-        if (request_header.request_api_version() != 4) {
-            response.error_code() = ErrorCode::UNSUPPORTED_VERSION;
-        } else {
-            response.error_code() = ErrorCode::NONE;
-            response.api_keys().emplace_back(ApiKey::API_VERSIONS, 0, 4);
-            response.api_keys().emplace_back(ApiKey::DESCRIBE_TOPIC_PARTITIONS, 0, 0);
+        ResponseHeader response_header(request_message.header().correlation_id());
+        std::unique_ptr<AbstractResponse> response;
+        switch (request_message.header().request_api_key()) {
+            case ApiKey::API_VERSIONS:
+                response = handle_api_versions(request_message);
+                break;
+            case ApiKey::DESCRIBE_TOPIC_PARTITIONS:
+                response = handle_describe_topic_partitions(request_message);
+                break;
         }
 
-        client.write_response(ResponseHeader(request_header.correlation_id()), response);
+        client.write_response(ResponseMessage(std::move(response_header), std::move(response)));
     }
 }
 

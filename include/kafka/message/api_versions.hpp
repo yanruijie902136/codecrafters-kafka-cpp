@@ -1,6 +1,7 @@
 #ifndef CODECRAFTERS_KAFKA_MESSAGE_API_VERSIONS_HPP_INCLUDED
 #define CODECRAFTERS_KAFKA_MESSAGE_API_VERSIONS_HPP_INCLUDED
 
+#include "kafka/message/abstract.hpp"
 #include "kafka/protocol/constants.hpp"
 #include "kafka/protocol/ireadable.hpp"
 #include "kafka/protocol/iwritable.hpp"
@@ -8,10 +9,10 @@
 
 namespace kafka {
 
-class ApiVersionsRequest {
+class ApiVersionsRequest : public AbstractRequest {
 public:
     // Reads this `ApiVersionsRequest` from a byte stream.
-    void read(IReadable &readable) {
+    void read(IReadable &readable) override {
         client_software_name_ = read_compact_string(readable);
         client_software_version_ = read_compact_string(readable);
         read_tagged_fields(readable);
@@ -22,7 +23,7 @@ private:
     COMPACT_STRING client_software_version_;
 };
 
-class ApiVersionsResponse {
+class ApiVersionsResponse : public AbstractResponse {
 public:
     class ApiVersion {
     public:
@@ -43,8 +44,13 @@ public:
         INT16 max_version_;
     };
 
+    // The API key of this `ApiVersionsResponse`.
+    ApiKey api_key() const override {
+        return ApiKey::API_VERSIONS;
+    }
+
     // Writes this `ApiVersionsResponse` to a byte stream.
-    void write(IWritable &writable) const {
+    void write(IWritable &writable) const override {
         write_error_code(writable, error_code_);
         write_compact_array(writable, api_keys_);
         write_int32(writable, throttle_time_ms_);

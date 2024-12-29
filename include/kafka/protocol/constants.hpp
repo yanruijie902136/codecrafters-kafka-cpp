@@ -14,6 +14,8 @@ enum class ApiKey : INT16 {
 // Numeric codes that indicate what problem occurred on the server.
 enum class ErrorCode : INT16 {
     NONE = 0,
+    // This server does not host this topic-partition.
+    UNKNOWN_TOPIC_OR_PARTITION = 3,
     // The version of API is not supported.
     UNSUPPORTED_VERSION = 35,
 };

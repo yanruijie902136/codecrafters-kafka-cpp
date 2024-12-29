@@ -5,6 +5,11 @@
 
 namespace kafka {
 
+void write_boolean(IWritable &writable, BOOLEAN boolean) {
+    char c = boolean ? 0x01 : 0x00;
+    writable.write(&c, sizeof(c));
+}
+
 void write_int16(IWritable &writable, INT16 n) {
     n = htons(n);
     writable.write(&n, sizeof(n));
@@ -23,6 +28,15 @@ void write_unsigned_varint(IWritable &writable, UNSIGNED_VARINT n) {
         }
         writable.write(&c, sizeof(c));
     } while (n > 0);
+}
+
+void write_uuid(IWritable &writable, const UUID &uuid) {
+    writable.write(uuid.data(), uuid.size());
+}
+
+void write_compact_nullable_string(IWritable &writable, const COMPACT_NULLABLE_STRING &str) {
+    write_unsigned_varint(writable, str.size() + 1);
+    writable.write(str.data(), str.size());
 }
 
 void write_bytes(IWritable &writable, const BYTES &bytes) {

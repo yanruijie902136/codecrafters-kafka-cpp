@@ -7,11 +7,13 @@
 
 namespace kafka {
 
+using BOOLEAN = bool;
 using INT16 = std::int16_t;
 using INT32 = std::int32_t;
 using UNSIGNED_VARINT = std::uint32_t;
 using COMPACT_STRING = std::string;
 using NULLABLE_STRING = std::string;
+using COMPACT_NULLABLE_STRING = std::string;
 using BYTES = std::vector<char>;
 template<typename T>
 using COMPACT_ARRAY = std::vector<T>;

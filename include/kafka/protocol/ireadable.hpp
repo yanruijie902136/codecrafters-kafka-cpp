@@ -35,6 +35,20 @@ NULLABLE_STRING read_nullable_string(IReadable &readable);
 // Reads a BYTES from a byte stream.
 BYTES read_bytes(IReadable &readable);
 
+// Reads a COMPACT_ARRAY from a byte stream.
+template<typename T>
+inline COMPACT_ARRAY<T> read_compact_array(IReadable &readable) {
+    UNSIGNED_VARINT n = read_unsigned_varint(readable);
+    if (n == 0) {
+        return {};
+    }
+    COMPACT_ARRAY<T> arr(--n);
+    for (T &object : arr) {
+        object.read(readable);
+    }
+    return arr;
+}
+
 // Reads tagged fields from a byte stream.
 void read_tagged_fields(IReadable &readable);
 

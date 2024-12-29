@@ -19,6 +19,10 @@ public:
         read_tagged_fields(readable);
     }
 
+    const ApiKey &request_api_key() const {
+        return request_api_key_;
+    }
+
     const INT16 &request_api_version() const {
         return request_api_version_;
     }
@@ -39,8 +43,11 @@ public:
     explicit ResponseHeader(int correlation_id) : correlation_id_(correlation_id) {}
 
     // Writes this `ResponseHeader` to a byte stream.
-    void write(IWritable &writable) const {
+    void write(IWritable &writable, short version) const {
         write_int32(writable, correlation_id_);
+        if (version != 0) {
+            write_tagged_fields(writable);
+        }
     }
 
 private:
