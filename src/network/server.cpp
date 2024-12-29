@@ -55,6 +55,7 @@ static std::unique_ptr<AbstractResponse> handle_api_versions(const RequestMessag
         response.error_code() = ErrorCode::UNSUPPORTED_VERSION;
     } else {
         response.error_code() = ErrorCode::NONE;
+        response.api_keys().emplace_back(ApiKey::FETCH, 0, 16);
         response.api_keys().emplace_back(ApiKey::API_VERSIONS, 0, 4);
         response.api_keys().emplace_back(ApiKey::DESCRIBE_TOPIC_PARTITIONS, 0, 0);
     }
