@@ -4,6 +4,7 @@
 #include "kafka/message/describe_topic_partitions.hpp"
 #include "kafka/message/headers.hpp"
 #include "kafka/message/messages.hpp"
+#include "kafka/metadata/cluster_metadata.hpp"
 #include "kafka/network/client.hpp"
 #include "kafka/protocol/constants.hpp"
 
@@ -62,19 +63,37 @@ static std::unique_ptr<AbstractResponse> handle_api_versions(const RequestMessag
     return std::make_unique<ApiVersionsResponse>(std::move(response));
 }
 
+using TopicRequest = DescribeTopicPartitionsRequest::TopicRequest;
+using ResponseTopic = DescribeTopicPartitionsResponse::ResponseTopic;
+
+static ResponseTopic make_response_topic(const TopicRequest &topic_request) {
+    ResponseTopic response_topic;
+    response_topic.name() = topic_request.name();
+
+    const ClusterMetadata &cluster_metadata = ClusterMetadata::get_instance();
+    UUID topic_id;
+    try {
+        topic_id = cluster_metadata.get_topic_id(topic_request.name());
+    } catch (...) {
+        response_topic.error_code() = ErrorCode::UNKNOWN_TOPIC_OR_PARTITION;
+        return response_topic;
+    }
+    response_topic.error_code() = ErrorCode::NONE;
+    response_topic.topic_id() = topic_id;
+    for (INT32 partition_id : cluster_metadata.get_partition_ids(topic_id)) {
+        response_topic.partitions().emplace_back(ErrorCode::NONE, partition_id);
+    }
+
+    return response_topic;
+}
+
 static std::unique_ptr<AbstractResponse> handle_describe_topic_partitions(const RequestMessage &request_message) {
     const DescribeTopicPartitionsRequest *request = request_message.request<DescribeTopicPartitionsRequest>();
 
     DescribeTopicPartitionsResponse response;
     response.throttle_time_ms() = 0;
     for (const auto &topic_request : request->topics()) {
-        using ResponseTopic = DescribeTopicPartitionsResponse::ResponseTopic;
-
-        ResponseTopic response_topic;
-        response_topic.error_code() = ErrorCode::UNKNOWN_TOPIC_OR_PARTITION;
-        response_topic.name() = topic_request.name();
-
-        response.topics().push_back(std::move(response_topic));
+        response.topics().push_back(make_response_topic(topic_request));
     }
 
     return std::make_unique<DescribeTopicPartitionsResponse>(std::move(response));
