@@ -47,6 +47,26 @@ Server::Server() {
     }
 }
 
+using FetchTopic = FetchRequest::FetchTopic;
+using FetchableTopicResponse = FetchResponse::FetchableTopicResponse;
+using PartitionData = FetchResponse::PartitionData;
+
+static FetchableTopicResponse make_fetchable_topic_response(const FetchTopic &fetch_topic) {
+    FetchableTopicResponse res;
+    res.topic_id() = fetch_topic.topic_id();
+
+    const ClusterMetadata &cluster_metadata = ClusterMetadata::get_instance();
+    try {
+        for (INT32 partition_id : cluster_metadata.get_partition_ids(fetch_topic.topic_id())) {
+            res.partitions().emplace_back(partition_id, ErrorCode::NONE);
+        }
+    } catch (...) {
+        res.partitions().emplace_back(0, ErrorCode::UNKNOWN_TOPIC_ID);
+    }
+
+    return res;
+}
+
 static std::unique_ptr<FetchResponse> handle_fetch(const RequestMessage &request_message) {
     const FetchRequest *request = request_message.request<FetchRequest>();
 
@@ -54,15 +74,8 @@ static std::unique_ptr<FetchResponse> handle_fetch(const RequestMessage &request
     response.error_code() = ErrorCode::NONE;
     response.throttle_time_ms() = 0;
     response.session_id() = 0;
-
     for (const auto &fetch_topic : request->topics()) {
-        using FetchableTopicResponse = FetchResponse::FetchableTopicResponse;
-
-        FetchableTopicResponse fetch_topic_response;
-        fetch_topic_response.topic_id() = fetch_topic.topic_id();
-        fetch_topic_response.partitions().emplace_back(0, ErrorCode::UNKNOWN_TOPIC_ID);
-
-        response.responses().push_back(std::move(fetch_topic_response));
+        response.responses().push_back(make_fetchable_topic_response(fetch_topic));
     }
 
     return std::make_unique<FetchResponse>(std::move(response));

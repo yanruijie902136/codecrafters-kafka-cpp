@@ -51,6 +51,7 @@ ClusterMetadata::ClusterMetadata() {
                 COMPACT_STRING topic_name = read_compact_string(rb);
                 UUID topic_id = read_uuid(rb);
                 topic_ids_[topic_name] = topic_id;
+                partition_ids_[topic_id] = {};
             } else if (type == 3) {
                 INT32 partition_id = read_int32(rb);
                 UUID topic_id = read_uuid(rb);
