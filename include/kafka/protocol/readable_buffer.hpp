@@ -3,10 +3,10 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <stdexcept>
 #include <utility>
 
 #include "kafka/protocol/ireadable.hpp"
+#include "kafka/utils.hpp"
 
 namespace kafka {
 
@@ -20,7 +20,7 @@ public:
         auto first = bytes_.begin() + index_;
         auto last = first + nbytes;
         if (last > bytes_.end()) {
-            throw std::runtime_error("ReadableBuffer underflow");
+            throw_runtime_error("ReadableBuffer underflow");
         }
         std::copy(first, last, static_cast<char *>(dst));
         index_ += nbytes;

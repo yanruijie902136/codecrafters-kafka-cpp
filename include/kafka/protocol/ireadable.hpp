@@ -2,6 +2,7 @@
 #define CODECRAFTERS_KAFKA_PROTOCOL_IREADABLE_HPP_INCLUDED
 
 #include <cstddef>
+#include <functional>
 
 #include "kafka/protocol/constants.hpp"
 #include "kafka/protocol/types.hpp"
@@ -81,6 +82,24 @@ inline COMPACT_ARRAY<T> read_compact_array(IReadable &readable) {
     COMPACT_ARRAY<T> arr(--n);
     for (T &object : arr) {
         object.read(readable);
+    }
+    return arr;
+}
+
+template<typename T>
+using ReadObjectFunction = std::function<T(IReadable &)>;
+
+// Reads a COMPACT_ARRAY from a byte stream.
+template<typename T>
+inline COMPACT_ARRAY<T> read_compact_array(IReadable &readable, const ReadObjectFunction<T> &read_function) {
+    UNSIGNED_VARINT n = read_unsigned_varint(readable);
+    if (n == 0) {
+        return {};
+    }
+    COMPACT_ARRAY<T> arr;
+    arr.reserve(--n);
+    while (n--) {
+        arr.push_back(read_function(readable));
     }
     return arr;
 }

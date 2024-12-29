@@ -45,7 +45,7 @@ public:
     };
 
     // The API key of this `ApiVersionsResponse`.
-    ApiKey api_key() const override {
+    constexpr ApiKey api_key() const override {
         return ApiKey::API_VERSIONS;
     }
 

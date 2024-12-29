@@ -20,7 +20,7 @@ public:
     virtual ~AbstractResponse() = default;
 
     // The API key of this response.
-    virtual ApiKey api_key() const = 0;
+    virtual constexpr ApiKey api_key() const = 0;
 
     // Writes this response to a byte stream.
     virtual void write(IWritable &writable) const = 0;

@@ -1,8 +1,6 @@
 #include "kafka/protocol/file_descriptor.hpp"
 
-#include <cerrno>
-#include <stdexcept>
-#include <system_error>
+#include <unistd.h>
 
 namespace kafka {
 
@@ -11,9 +9,9 @@ void FileDescriptor::read(void *dst, std::size_t nbytes) {
     while (nbytes > 0) {
         ssize_t nr = ::read(fd_, p, nbytes);
         if (nr < 0) {
-            throw std::system_error(errno, std::system_category(), "read");
+            throw_system_error("read");
         } else if (nr == 0) {
-            throw std::runtime_error("incomplete read");
+            throw_runtime_error("incomplete read");
         }
         p += nr;
         nbytes -= nr;
@@ -25,7 +23,7 @@ void FileDescriptor::write(const void *src, std::size_t nbytes) {
     while (nbytes > 0) {
         ssize_t nw = ::write(fd_, p, nbytes);
         if (nw < 0) {
-            throw std::system_error(errno, std::system_category(), "write");
+            throw_system_error("write");
         }
         p += nw;
         nbytes -= nw;

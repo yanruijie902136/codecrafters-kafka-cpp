@@ -22,14 +22,29 @@ public:
 // Writes a BOOLEAN to a byte stream.
 void write_boolean(IWritable &writable, BOOLEAN boolean);
 
+// Writes an INT8 to a byte stream.
+void write_int8(IWritable &writable, INT8 n);
+
 // Writes an INT16 to a byte stream.
 void write_int16(IWritable &writable, INT16 n);
 
 // Writes an INT32 to a byte stream.
 void write_int32(IWritable &writable, INT32 n);
 
+// Writes an INT64 to a byte stream.
+void write_int64(IWritable &writable, INT64 n);
+
+// Writes a VARINT to a byte stream.
+void write_varint(IWritable &writable, VARINT n);
+
 // Writes an UNSIGNED_VARINT to a byte stream.
 void write_unsigned_varint(IWritable &writable, UNSIGNED_VARINT n);
+
+// Writes a VARLONG to a byte stream.
+void write_varlong(IWritable &writable, VARLONG n);
+
+// Writes an UNSIGNED_VARLONG to a byte stream.
+void write_unsigned_varlong(IWritable &writable, UNSIGNED_VARLONG n);
 
 // Writes a UUID to a byte stream.
 void write_uuid(IWritable &writable, const UUID &uuid);

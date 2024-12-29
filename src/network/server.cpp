@@ -2,19 +2,19 @@
 #include "kafka/message/abstract.hpp"
 #include "kafka/message/api_versions.hpp"
 #include "kafka/message/describe_topic_partitions.hpp"
+#include "kafka/message/fetch.hpp"
 #include "kafka/message/headers.hpp"
 #include "kafka/message/messages.hpp"
 #include "kafka/metadata/cluster_metadata.hpp"
 #include "kafka/network/client.hpp"
 #include "kafka/protocol/constants.hpp"
+#include "kafka/utils.hpp"
 
-#include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
 #include <memory>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <system_error>
 #include <thread>
 
 namespace kafka {
@@ -22,32 +22,43 @@ namespace kafka {
 Server::Server() {
     server_socket_ = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket_ < 0) {
-        throw std::system_error(errno, std::system_category(), "socket");
+        throw_system_error("socket");
     }
 
     // Since the tester restarts your program quite often, setting SO_REUSEADDR
     // ensures that we don't run into 'Address already in use' errors.
     const int reuse = 1;
     if (setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
-        throw std::system_error(errno, std::system_category(), "setsockopt");
+        throw_system_error("setsockopt");
     }
 
     sockaddr_in server_addr;
     std::memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_addr.sin_port = htons(9092);
+    server_addr.sin_addr.s_addr = to_network_byte_order(INADDR_ANY);
+    server_addr.sin_port = to_network_byte_order((unsigned short)9092);
     if (bind(server_socket_, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr)) < 0) {
-        throw std::system_error(errno, std::system_category(), "bind");
+        throw_system_error("bind");
     }
 
     const int backlog = 5;
     if (listen(server_socket_, backlog) < 0) {
-        throw std::system_error(errno, std::system_category(), "listen");
+        throw_system_error("listen");
     }
 }
 
-static std::unique_ptr<AbstractResponse> handle_api_versions(const RequestMessage &request_message) {
+static std::unique_ptr<FetchResponse> handle_fetch(const RequestMessage &request_message) {
+    const FetchRequest *request = request_message.request<FetchRequest>();
+
+    FetchResponse response;
+    response.error_code() = ErrorCode::NONE;
+    response.throttle_time_ms() = 0;
+    response.session_id() = 0;
+
+    return std::make_unique<FetchResponse>(std::move(response));
+}
+
+static std::unique_ptr<ApiVersionsResponse> handle_api_versions(const RequestMessage &request_message) {
     const ApiVersionsRequest *request = request_message.request<ApiVersionsRequest>();
 
     ApiVersionsResponse response;
@@ -88,7 +99,7 @@ static ResponseTopic make_response_topic(const TopicRequest &topic_request) {
     return response_topic;
 }
 
-static std::unique_ptr<AbstractResponse> handle_describe_topic_partitions(const RequestMessage &request_message) {
+static std::unique_ptr<DescribeTopicPartitionsResponse> handle_describe_topic_partitions(const RequestMessage &request_message) {
     const DescribeTopicPartitionsRequest *request = request_message.request<DescribeTopicPartitionsRequest>();
 
     DescribeTopicPartitionsResponse response;
@@ -107,6 +118,9 @@ static void serve_client(Client client) {
         ResponseHeader response_header(request_message.header().correlation_id());
         std::unique_ptr<AbstractResponse> response;
         switch (request_message.header().request_api_key()) {
+            case ApiKey::FETCH:
+                response = handle_fetch(request_message);
+                break;
             case ApiKey::API_VERSIONS:
                 response = handle_api_versions(request_message);
                 break;
@@ -126,7 +140,7 @@ void Server::start() {
             if (errno == ECONNABORTED || errno == EINTR) {
                 continue;
             }
-            throw std::system_error(errno, std::system_category(), "accept");
+            throw_system_error("accept");
         }
 
         Client client(client_socket);

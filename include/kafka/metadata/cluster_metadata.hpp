@@ -3,34 +3,23 @@
 
 #include <map>
 #include <mutex>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include "kafka/protocol/ireadable.hpp"
+#include "kafka/protocol/iwritable.hpp"
 #include "kafka/protocol/readable_buffer.hpp"
 #include "kafka/protocol/types.hpp"
 #include "kafka/protocol/uuid.hpp"
+#include "kafka/utils.hpp"
 
 namespace kafka {
-
-class RecordHeader {
-public:
-    // Reads this `RecordHeader` from a byte stream.
-    void read(IReadable &readable) {
-        throw std::runtime_error("unexpected record header");
-    }
-};
 
 class Record {
 public:
     // Reads this `Record` from a byte stream.
     void read(IReadable &readable) {
         length_ = read_varint(readable);
-        if (length_ < 0) {
-            return;
-        }
-
         BYTES record_bytes(length_);
         readable.read(record_bytes.data(), record_bytes.size());
         ReadableBuffer rb(std::move(record_bytes));
@@ -38,19 +27,37 @@ public:
         timestamp_delta_ = read_varlong(rb);
         offset_delta_ = read_varint(rb);
 
-        key_length_ = read_varint(rb);
-        key_.resize(key_length_ + 1);
-        rb.read(key_.data(), key_.size());
-
-        value_len_ = read_varint(rb);
-        if (value_len_ < 0) {
-            value_.clear();
-        } else {
-            value_.resize(value_len_);
-            rb.read(value_.data(), value_.size());
+        unsigned char c;
+        rb.read(&c, sizeof(c));
+        if (c != 0x01) {
+            throw_runtime_error("unexpected key");
         }
 
-        headers_ = read_compact_array<RecordHeader>(rb);
+        value_len_ = read_varint(rb);
+        value_.resize(value_len_);
+        rb.read(value_.data(), value_.size());
+
+        rb.read(&c, sizeof(c));
+        if (c != 0x00) {
+            throw_runtime_error("unexpected record header");
+        }
+    }
+
+    // Writes this `Record` to a byte stream.
+    void write(IWritable &writable) const {
+        write_varint(writable, length_);
+        write_int8(writable, attributes_);
+        write_varlong(writable, timestamp_delta_);
+        write_varint(writable, offset_delta_);
+
+        unsigned char c = 0x01;
+        writable.write(&c, sizeof(c));
+
+        write_varint(writable, value_.size());
+        writable.write(value_.data(), value_.size());
+
+        c = 0x00;
+        writable.write(&c, sizeof(c));
     }
 
     const BYTES &value() const {
@@ -62,11 +69,8 @@ private:
     INT8 attributes_;
     VARLONG timestamp_delta_;
     VARINT offset_delta_;
-    VARINT key_length_;
-    BYTES key_;
     VARINT value_len_;
     BYTES value_;
-    COMPACT_ARRAY<RecordHeader> headers_;
 };
 
 class RecordBatch {

@@ -7,6 +7,7 @@
 #include "kafka/message/abstract.hpp"
 #include "kafka/message/api_versions.hpp"
 #include "kafka/message/describe_topic_partitions.hpp"
+#include "kafka/message/fetch.hpp"
 #include "kafka/message/headers.hpp"
 #include "kafka/protocol/constants.hpp"
 #include "kafka/protocol/ireadable.hpp"
@@ -23,6 +24,9 @@ public:
         ReadableBuffer rb(read_bytes(readable));
         header_.read(rb);
         switch (header_.request_api_key()) {
+            case ApiKey::FETCH:
+                request_ = std::make_unique<FetchRequest>();
+                break;
             case ApiKey::API_VERSIONS:
                 request_ = std::make_unique<ApiVersionsRequest>();
                 break;

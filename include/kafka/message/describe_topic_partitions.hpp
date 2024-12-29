@@ -128,7 +128,7 @@ public:
     };
 
     // The API key of this `DescribeTopicPartitionsResponse`.
-    ApiKey api_key() const override {
+    constexpr ApiKey api_key() const override {
         return ApiKey::DESCRIBE_TOPIC_PARTITIONS;
     }
 

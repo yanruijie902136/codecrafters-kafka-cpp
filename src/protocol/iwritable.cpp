@@ -1,6 +1,6 @@
 #include "kafka/protocol/iwritable.hpp"
+#include "kafka/utils.hpp"
 
-#include <arpa/inet.h>
 #include <utility>
 
 namespace kafka {
@@ -10,17 +10,38 @@ void write_boolean(IWritable &writable, BOOLEAN boolean) {
     writable.write(&c, sizeof(c));
 }
 
+void write_int8(IWritable &writable, INT8 n) {
+    writable.write(&n, sizeof(n));
+}
+
 void write_int16(IWritable &writable, INT16 n) {
-    n = htons(n);
+    n = to_network_byte_order(n);
     writable.write(&n, sizeof(n));
 }
 
 void write_int32(IWritable &writable, INT32 n) {
-    n = htonl(n);
+    n = to_network_byte_order(n);
     writable.write(&n, sizeof(n));
 }
 
+void write_int64(IWritable &writable, INT64 n) {
+    n = to_network_byte_order(n);
+    writable.write(&n, sizeof(n));
+}
+
+void write_varint(IWritable &writable, VARINT n) {
+    write_unsigned_varint(writable, (n << 1) ^ (n >> 31));
+}
+
 void write_unsigned_varint(IWritable &writable, UNSIGNED_VARINT n) {
+    write_unsigned_varlong(writable, n);
+}
+
+void write_varlong(IWritable &writable, VARLONG n) {
+    write_unsigned_varlong(writable, (n << 1) ^ (n >> 63));
+}
+
+void write_unsigned_varlong(IWritable &writable, UNSIGNED_VARLONG n) {
     do {
         char c = n & 0x7F;
         if ((n >>= 7) > 0) {

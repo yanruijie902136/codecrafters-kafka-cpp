@@ -1,14 +1,13 @@
 #ifndef CODECRAFTERS_KAFKA_PROTOCOL_FILE_DESCRIPTOR_HPP_INCLUDED
 #define CODECRAFTERS_KAFKA_PROTOCOL_FILE_DESCRIPTOR_HPP_INCLUDED
 
-#include <cerrno>
 #include <fcntl.h>
-#include <system_error>
 #include <unistd.h>
 #include <utility>
 
 #include "kafka/protocol/ireadable.hpp"
 #include "kafka/protocol/iwritable.hpp"
+#include "kafka/utils.hpp"
 
 namespace kafka {
 
@@ -20,7 +19,7 @@ public:
     FileDescriptor(const char *path, int mode) {
         fd_ = open(path, mode);
         if (fd_ < 0) {
-            throw std::system_error(errno, std::system_category(), path);
+            throw_system_error(path);
         }
     }
 
