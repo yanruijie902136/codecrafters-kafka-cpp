@@ -2,9 +2,20 @@
 #include "kafka/utils/syscalls.hpp"
 
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 #include <stdexcept>
+#include <vector>
 
 namespace kafka {
+
+BytesIO::BytesIO(const char *path) : pos_(0) {
+        std::ifstream file(path);
+        std::stringstream ss;
+        ss << file.rdbuf();
+        const std::string &str = ss.str();
+        data_ = std::vector<unsigned char>(str.begin(), str.end());
+}
 
 BytesIO::BytesIO(int fildes, std::size_t size) : data_(size), pos_(0) {
         fullread(fildes, data_.data(), size);

@@ -2,6 +2,7 @@
 #define codecrafters_kafka_utils_bytes_io_hpp
 
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 #include "kafka/protocol/readable.hpp"
@@ -13,6 +14,12 @@ namespace kafka {
 class BytesIO : public Readable, public Writable {
 public:
         BytesIO() : pos_(0) {}
+        explicit BytesIO(std::vector<unsigned char> data) : data_(std::move(data)), pos_(0) {}
+
+        // Initialize with a file's entire contents.
+        explicit BytesIO(const char *path);
+
+        // Initialize with `size` bytes read from a file descriptor.
         explicit BytesIO(int fildes, std::size_t size);
 
         void read(void *buffer, std::size_t size) override;
@@ -23,14 +30,14 @@ public:
                 return data_;
         }
 
-private:
-        std::vector<unsigned char> data_;
-        std::size_t pos_;
-
         // Returns the number of remaining bytes in this byte stream.
         std::size_t remaining() const {
                 return data_.size() - pos_;
         }
+
+private:
+        std::vector<unsigned char> data_;
+        std::size_t pos_;
 };
 
 }

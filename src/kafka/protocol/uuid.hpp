@@ -3,6 +3,7 @@
 
 #include <cstring>
 
+#include "kafka/protocol/readable.hpp"
 #include "kafka/protocol/writable.hpp"
 
 namespace kafka {
@@ -14,8 +15,17 @@ public:
                 std::memset(data_, 0, sizeof(data_));
         }
 
+        void read(Readable &readable) {
+                readable.read(data_, sizeof(data_));
+        }
+
         void write(Writable &writable) const {
                 writable.write(data_, sizeof(data_));
+        }
+
+        // Strict weak ordering comparator of UUIDs.
+        bool operator<(const Uuid &other) const {
+                return std::memcmp(data_, other.data_, sizeof(data_));
         }
 
 private:

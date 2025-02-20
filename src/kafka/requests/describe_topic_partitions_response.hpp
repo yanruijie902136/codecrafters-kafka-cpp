@@ -15,6 +15,8 @@ namespace kafka {
 
 class ResponsePartition {
 public:
+        ResponsePartition(ErrorCode error_code, std::int32_t partition_index) : error_code_(error_code), partition_index_(partition_index) {}
+
         void write(Writable &writable) const {
                 write_error_code(writable, error_code_);
                 write_int32(writable, partition_index_);
@@ -61,6 +63,16 @@ public:
         // Sets the topic name.
         void set_name(std::string name) {
                 name_ = std::move(name);
+        }
+
+        // Sets the topic id.
+        void set_topic_id(Uuid topic_id) {
+                topic_id_ = std::move(topic_id);
+        }
+
+        // Sets the partitions in the topic.
+        void set_partitions(std::vector<ResponsePartition> partitions) {
+                partitions_ = std::move(partitions);
         }
 
 private:

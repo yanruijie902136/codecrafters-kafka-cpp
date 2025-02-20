@@ -1,4 +1,6 @@
 #include "kafka/handlers/describe_topic_partitions_request_handler.hpp"
+#include "kafka/metadata/cluster_metadata.hpp"
+#include "kafka/protocol/uuid.hpp"
 #include "kafka/requests/describe_topic_partitions_request.hpp"
 #include "kafka/requests/describe_topic_partitions_response.hpp"
 
@@ -26,8 +28,25 @@ std::unique_ptr<Response> DescribeTopicPartitionsRequestHandler::build_response_
 
 ResponseTopic DescribeTopicPartitionsRequestHandler::build_response_topic(const TopicRequest &topic_request) {
         ResponseTopic response_topic;
-        response_topic.set_error_code(ErrorCode::UNKNOWN_TOPIC_OR_PARTITION);
         response_topic.set_name(topic_request.name());
+
+        try {
+                auto &cluster_metadata = ClusterMetadata::instance();
+
+                Uuid topic_id = cluster_metadata.lookup_topic_id(topic_request.name());
+                response_topic.set_topic_id(topic_id);
+
+                std::vector<ResponsePartition> partitions;
+                for (std::int32_t partition_id : cluster_metadata.lookup_partitions(topic_id)) {
+                        partitions.emplace_back(ErrorCode::NONE, partition_id);
+                }
+                response_topic.set_partitions(std::move(partitions));
+        } catch (...) {
+                response_topic.set_error_code(ErrorCode::UNKNOWN_TOPIC_OR_PARTITION);
+                return response_topic;
+        }
+
+        response_topic.set_error_code(ErrorCode::NONE);
         return response_topic;
 }
 
