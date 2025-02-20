@@ -11,7 +11,7 @@ class DescribeTopicPartitionsRequestHandler : public RequestHandler {
 private:
         std::unique_ptr<Response> build_response_body(const Request *request) override;
 
-        ResponseTopic build_response_topic(const TopicRequest &topic_request);
+        ResponseTopic process_topic_request(const TopicRequest &topic_request);
 };
 
 }

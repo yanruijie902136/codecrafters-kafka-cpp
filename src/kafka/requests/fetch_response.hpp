@@ -2,6 +2,7 @@
 #define codecrafters_kafka_requests_fetch_response_hpp
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "kafka/metadata/record_batch.hpp"
@@ -27,6 +28,8 @@ private:
 
 class PartitionData {
 public:
+        PartitionData(std::int32_t partition_index, ErrorCode error_code) : partition_index_(partition_index), error_code_(error_code) {}
+
         void write(Writable &writable) const {
                 write_int32(writable, partition_index_);
                 write_error_code(writable, error_code_);
@@ -58,6 +61,14 @@ public:
                 write_tagged_fields(writable);
         }
 
+        void set_topic_id(Uuid topic_id) {
+                topic_id_ = std::move(topic_id);
+        }
+
+        void set_partitions(std::vector<PartitionData> partitions) {
+                partitions_ = std::move(partitions);
+        }
+
 private:
         Uuid topic_id_;
         std::vector<PartitionData> partitions_;
@@ -79,6 +90,11 @@ public:
         // Sets the fetch session ID, or 0 if this is not part of a fetch session.
         void set_session_id(std::int32_t session_id) {
                 session_id_ = session_id;
+        }
+
+        // Sets the response topics.
+        void set_responses(std::vector<FetchableTopicResponse> responses) {
+                responses_ = std::move(responses);
         }
 
 private:

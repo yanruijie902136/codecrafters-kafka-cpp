@@ -14,6 +14,8 @@ enum class ErrorCode : std::int16_t {
         UNKNOWN_TOPIC_OR_PARTITION = 3,
         // The version of API is not supported.
         UNSUPPORTED_VERSION = 35,
+        // This server does not host this topic ID.
+        UNKNOWN_TOPIC_ID = 100,
 };
 
 // Writes an ErrorCode to a byte stream.

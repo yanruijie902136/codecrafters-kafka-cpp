@@ -19,14 +19,14 @@ std::unique_ptr<Response> DescribeTopicPartitionsRequestHandler::build_response_
 
         std::vector<ResponseTopic> topics;
         for (const auto &topic_request : request->topics()) {
-                topics.push_back(build_response_topic(topic_request));
+                topics.push_back(process_topic_request(topic_request));
         }
         response.set_topics(std::move(topics));
 
         return std::make_unique<DescribeTopicPartitionsResponse>(std::move(response));
 }
 
-ResponseTopic DescribeTopicPartitionsRequestHandler::build_response_topic(const TopicRequest &topic_request) {
+ResponseTopic DescribeTopicPartitionsRequestHandler::process_topic_request(const TopicRequest &topic_request) {
         ResponseTopic response_topic;
         response_topic.set_name(topic_request.name());
 

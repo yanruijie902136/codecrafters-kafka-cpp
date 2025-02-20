@@ -40,6 +40,11 @@ public:
                 read_tagged_fields(readable);
         }
 
+        // The unique topic ID.
+        const Uuid &topic_id() const {
+                return topic_id_;
+        }
+
 private:
         Uuid topic_id_;
         std::vector<FetchPartition> partitions_;
@@ -60,6 +65,12 @@ private:
 
 // Fetch request version 16.
 class FetchRequest : public Request {
+public:
+        // The topics to fetch.
+        const std::vector<FetchTopic> &topics() const {
+                return topics_;
+        }
+
 private:
         std::int32_t max_wait_ms_;
         std::int32_t min_bytes_;
