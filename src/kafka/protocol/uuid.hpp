@@ -25,7 +25,7 @@ public:
 
         // Strict weak ordering comparator of UUIDs.
         bool operator<(const Uuid &other) const {
-                return std::memcmp(data_, other.data_, sizeof(data_));
+                return std::memcmp(data_, other.data_, sizeof(data_)) < 0;
         }
 
 private:
