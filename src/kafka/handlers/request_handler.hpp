@@ -11,6 +11,7 @@
 
 namespace kafka {
 
+// Abstract base class of an API request handler.
 class RequestHandler {
 public:
         virtual ~RequestHandler() {}

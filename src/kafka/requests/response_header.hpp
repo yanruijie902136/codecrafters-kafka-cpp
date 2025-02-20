@@ -7,12 +7,15 @@
 
 namespace kafka {
 
-// Response header version 0.
+// Response header version 0~1.
 class ResponseHeader {
 public:
         // Writes this response header to a byte stream.
-        void write(Writable &writable) const {
+        void write(Writable &writable, short version) const {
                 write_int32(writable, correlation_id_);
+                if (version == 1) {
+                        write_tagged_fields(writable);
+                }
         }
 
         // Sets the correlation ID of this response.

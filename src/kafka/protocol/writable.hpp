@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <string>
 #include <vector>
 
 namespace kafka {
@@ -16,6 +18,12 @@ public:
         virtual void write(const void *buffer, std::size_t size) = 0;
 };
 
+template<typename T>
+using WriteObjectFunction = std::function<void(Writable &, const T &)>;
+
+// Writes a BOOLEAN to a byte stream.
+void write_boolean(Writable &writable, bool b);
+
 // Writes an INT16 to a byte stream.
 void write_int16(Writable &writable, std::int16_t n);
 
@@ -25,12 +33,24 @@ void write_int32(Writable &writable, std::int32_t n);
 // Writes an UNSIGNED_VARINT to a byte stream.
 void write_unsigned_varint(Writable &writable, std::uint32_t n);
 
+// Writes a COMPACT_NULLABLE_STRING to a byte stream.
+void write_compact_nullable_string(Writable &writable, const std::string &s);
+
 // Writes a COMPACT_ARRAY to a byte stream.
 template<typename T>
 inline void write_compact_array(Writable &writable, const std::vector<T> &arr) {
         write_unsigned_varint(writable, arr.size() + 1);
         for (const T &object : arr) {
                 object.write(writable);
+        }
+}
+
+// Writes a COMPACT_ARRAY to a byte stream.
+template<typename T>
+inline void write_compact_array(Writable &writable, const std::vector<T> &arr, const WriteObjectFunction<T> &write_function) {
+        write_unsigned_varint(writable, arr.size() + 1);
+        for (const T &object : arr) {
+                write_function(writable, object);
         }
 }
 

@@ -14,7 +14,7 @@ private:
         std::string client_software_name_;
         std::string client_software_version_;
 
-        virtual void read_request_body(Readable &readable) override {
+        void read_request_body(Readable &readable) override {
                 client_software_name_ = read_compact_string(readable);
                 client_software_version_ = read_compact_string(readable);
                 read_tagged_fields(readable);

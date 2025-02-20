@@ -10,6 +10,11 @@ static IntType host_to_network(IntType n) {
 
 namespace kafka {
 
+void write_boolean(Writable &writable, bool b) {
+        unsigned char c = b ? 0x01 : 0x00;
+        writable.write(&c, sizeof(c));
+}
+
 void write_int16(Writable &writable, std::int16_t n) {
         n = host_to_network(n);
         writable.write(&n, sizeof(n));
@@ -28,6 +33,11 @@ void write_unsigned_varint(Writable &writable, std::uint32_t n) {
                 }
                 writable.write(&c, sizeof(c));
         } while (n > 0);
+}
+
+void write_compact_nullable_string(Writable &writable, const std::string &s) {
+        write_unsigned_varint(writable, s.size() + 1);
+        writable.write(s.data(), s.size());
 }
 
 void write_tagged_fields(Writable &writable) {

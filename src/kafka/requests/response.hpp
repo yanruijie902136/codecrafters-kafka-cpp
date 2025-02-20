@@ -15,7 +15,7 @@ public:
 
         // Writes this API response to a byte stream, without the size prefix.
         void write(Writable &writable) const {
-                header_.write(writable);
+                write_response_header(writable);
                 write_response_body(writable);
         }
 
@@ -24,8 +24,13 @@ public:
                 header_ = std::move(header);
         }
 
-private:
+protected:
         ResponseHeader header_;
+
+private:
+        virtual void write_response_header(Writable &writable) const {
+                header_.write(writable, 1);
+        }
 
         virtual void write_response_body(Writable &writable) const = 0;
 };

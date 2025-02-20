@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace kafka {
 
@@ -30,6 +31,20 @@ std::string read_compact_string(Readable &readable);
 
 // Reads a NULLABLE_STRING from a byte stream.
 std::string read_nullable_string(Readable &readable);
+
+// Reads a COMPACT_ARRAY from a byte stream.
+template<typename T>
+inline std::vector<T> read_compact_array(Readable &readable) {
+        std::uint32_t n = read_unsigned_varint(readable);
+        if (n == 0) {
+                return {};
+        }
+        std::vector<T> arr(--n);
+        for (T &object : arr) {
+                object.read(readable);
+        }
+        return arr;
+}
 
 // Reads tagged fields from a byte stream.
 void read_tagged_fields(Readable &readable);

@@ -16,7 +16,6 @@ class ApiVersion {
 public:
         ApiVersion(ApiKey api_key, std::int16_t min_version, std::int16_t max_version) : api_key_(api_key), min_version_(min_version), max_version_(max_version) {}
 
-        // Writes this ApiVersion to a byte stream.
         void write(Writable &writable) const {
                 write_api_key(writable, api_key_);
                 write_int16(writable, min_version_);
@@ -52,6 +51,11 @@ private:
         ErrorCode error_code_;
         std::vector<ApiVersion> api_keys_;
         std::int32_t throttle_time_ms_;
+
+        void write_response_header(Writable &writable) const override {
+                // ApiVersions response uses response header version 0.
+                header_.write(writable, 0);
+        }
 
         void write_response_body(Writable &writable) const override {
                 write_error_code(writable, error_code_);
