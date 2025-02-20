@@ -24,17 +24,44 @@ using WriteObjectFunction = std::function<void(Writable &, const T &)>;
 // Writes a BOOLEAN to a byte stream.
 void write_boolean(Writable &writable, bool b);
 
+// Writes an INT8 to a byte stream.
+void write_int8(Writable &writable, std::int8_t n);
+
 // Writes an INT16 to a byte stream.
 void write_int16(Writable &writable, std::int16_t n);
 
 // Writes an INT32 to a byte stream.
 void write_int32(Writable &writable, std::int32_t n);
 
+// Writes an INT64 to a byte stream.
+void write_int64(Writable &writable, std::int64_t n);
+
+// Writes an UINT32 to a byte stream.
+void write_uint32(Writable &writable, std::uint32_t n);
+
 // Writes an UNSIGNED_VARINT to a byte stream.
 void write_unsigned_varint(Writable &writable, std::uint32_t n);
 
+// Writes a VARINT to a byte stream.
+void write_varint(Writable &writable, std::int32_t n);
+
+// Writes an UNSIGNED_VARLONG to a byte stream.
+void write_unsigned_varlong(Writable &writable, std::uint64_t n);
+
+// Writes a VARLONG to a byte stream.
+void write_varlong(Writable &writable, std::int64_t n);
+
 // Writes a COMPACT_NULLABLE_STRING to a byte stream.
 void write_compact_nullable_string(Writable &writable, const std::string &s);
+
+// Writes an ARRAY to a byte stream.
+template<typename T>
+inline void write_array(Writable &writable, const std::vector<T> &arr) {
+        write_int32(writable, arr.size());
+        for (const T &object : arr) {
+                object.write(writable);
+        }
+}
 
 // Writes a COMPACT_ARRAY to a byte stream.
 template<typename T>

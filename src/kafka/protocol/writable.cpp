@@ -15,6 +15,10 @@ void write_boolean(Writable &writable, bool b) {
         writable.write(&c, sizeof(c));
 }
 
+void write_int8(Writable &writable, std::int8_t n) {
+        writable.write(&n, sizeof(n));
+}
+
 void write_int16(Writable &writable, std::int16_t n) {
         n = host_to_network(n);
         writable.write(&n, sizeof(n));
@@ -25,7 +29,25 @@ void write_int32(Writable &writable, std::int32_t n) {
         writable.write(&n, sizeof(n));
 }
 
+void write_int64(Writable &writable, std::int64_t n) {
+        n = host_to_network(n);
+        writable.write(&n, sizeof(n));
+}
+
+void write_uint32(Writable &writable, std::uint32_t n) {
+        n = host_to_network(n);
+        writable.write(&n, sizeof(n));
+}
+
 void write_unsigned_varint(Writable &writable, std::uint32_t n) {
+        write_unsigned_varlong(writable, n);
+}
+
+void write_varint(Writable &writable, std::int32_t n) {
+        write_unsigned_varint(writable, (n << 1) ^ (n >> 31));
+}
+
+void write_unsigned_varlong(Writable &writable, std::uint64_t n) {
         do {
                 unsigned char c = n & 0x7F;
                 if ( (n >>= 7) > 0) {
@@ -33,6 +55,10 @@ void write_unsigned_varint(Writable &writable, std::uint32_t n) {
                 }
                 writable.write(&c, sizeof(c));
         } while (n > 0);
+}
+
+void write_varlong(Writable &writable, std::int64_t n) {
+        write_unsigned_varlong(writable, (n << 1) ^ (n >> 63));
 }
 
 void write_compact_nullable_string(Writable &writable, const std::string &s) {

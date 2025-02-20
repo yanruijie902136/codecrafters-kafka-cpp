@@ -2,10 +2,12 @@
 #define codecrafters_kafka_metadata_record_hpp
 
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 
 #include "kafka/metadata/record_header.hpp"
 #include "kafka/protocol/readable.hpp"
+#include "kafka/protocol/writable.hpp"
 
 namespace kafka {
 
@@ -21,6 +23,16 @@ public:
                 headers_ = read_compact_array<RecordHeader>(readable);
         }
 
+        void write(Writable &writable) const {
+                write_varint(writable, length_);
+                write_int8(writable, attributes_);
+                write_varlong(writable, timestamp_delta_);
+                write_varint(writable, offset_delta_);
+                write_key(writable);
+                write_value(writable);
+                write_compact_array(writable, headers_);
+        }
+
         const std::vector<unsigned char> &value() const {
                 return value_;
         }
@@ -30,26 +42,28 @@ private:
         std::int8_t attributes_;
         std::int64_t timestamp_delta_;
         std::int32_t offset_delta_;
-        std::int32_t key_length_;
-        std::vector<unsigned char> key_;
-        std::int32_t value_len_;
         std::vector<unsigned char> value_;
         std::vector<RecordHeader> headers_;
 
         void read_key(Readable &readable) {
-                key_length_ = read_varint(readable);
-                if (key_length_ < 0) {
-                        key_.clear();
-                } else {
-                        key_.resize(key_length_);
-                        readable.read(key_.data(), key_length_);
+                if (read_varint(readable) >= 0) {
+                        throw std::runtime_error("unexpected key");
                 }
         }
 
+        void write_key(Writable &writable) const {
+                write_varint(writable, -1);
+        }
+
         void read_value(Readable &readable) {
-                value_len_ = read_varint(readable);
-                value_.resize(value_len_);
-                readable.read(value_.data(), value_len_);
+                std::int32_t value_len = read_varint(readable);
+                value_.resize(value_len);
+                readable.read(value_.data(), value_len);
+        }
+
+        void write_value(Writable &writable) const {
+                write_varint(writable, value_.size());
+                writable.write(value_.data(), value_.size());
         }
 };
 

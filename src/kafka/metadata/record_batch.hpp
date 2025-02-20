@@ -6,6 +6,7 @@
 
 #include "kafka/metadata/record.hpp"
 #include "kafka/protocol/readable.hpp"
+#include "kafka/protocol/writable.hpp"
 
 namespace kafka {
 
@@ -25,6 +26,22 @@ public:
                 producer_epoch_ = read_int16(readable);
                 base_sequence_ = read_int32(readable);
                 records_ = read_array<Record>(readable);
+        }
+
+        void write(Writable &writable) const {
+                write_int64(writable, base_offset_);
+                write_int32(writable, batch_length_);
+                write_int32(writable, partition_leader_epoch_);
+                write_int8(writable, magic_);
+                write_uint32(writable, crc_);
+                write_int16(writable, attributes_);
+                write_int32(writable, last_offset_delta_);
+                write_int64(writable, base_timestamp_);
+                write_int64(writable, max_timestamp_);
+                write_int64(writable, producer_id_);
+                write_int16(writable, producer_epoch_);
+                write_int32(writable, base_sequence_);
+                write_array(writable, records_);
         }
 
         const std::vector<Record> &records() const {

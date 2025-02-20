@@ -1,6 +1,7 @@
 #include "kafka/requests/request.hpp"
 #include "kafka/requests/api_versions_request.hpp"
 #include "kafka/requests/describe_topic_partitions_request.hpp"
+#include "kafka/requests/fetch_request.hpp"
 #include "kafka/requests/request_header.hpp"
 
 #include <memory>
@@ -14,6 +15,9 @@ std::unique_ptr<Request> Request::read(Readable &readable) {
 
         std::unique_ptr<Request> request;
         switch (header.request_api_key()) {
+        case ApiKey::FETCH:
+                request = std::make_unique<FetchRequest>();
+                break;
         case ApiKey::API_VERSIONS:
                 request = std::make_unique<ApiVersionsRequest>();
                 break;

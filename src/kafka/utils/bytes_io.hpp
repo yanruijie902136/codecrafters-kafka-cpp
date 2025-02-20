@@ -20,7 +20,7 @@ public:
         explicit BytesIO(const char *path);
 
         // Initialize with `size` bytes read from a file descriptor.
-        explicit BytesIO(int fildes, std::size_t size);
+        BytesIO(int fildes, std::size_t size);
 
         void read(void *buffer, std::size_t size) override;
         void write(const void *buffer, std::size_t size) override;

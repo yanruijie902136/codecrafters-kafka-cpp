@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -16,6 +17,9 @@ public:
         // Reads bytes from this byte stream.
         virtual void read(void *buffer, std::size_t size) = 0;
 };
+
+template<typename T>
+using ReadObjectFunction = std::function<T(Readable &)>;
 
 // Reads an INT8 from a byte stream.
 std::int8_t read_int8(Readable &readable);
@@ -74,6 +78,20 @@ inline std::vector<T> read_compact_array(Readable &readable) {
         std::vector<T> arr(--n);
         for (T &object : arr) {
                 object.read(readable);
+        }
+        return arr;
+}
+
+// Reads a COMPACT_ARRAY from a byte stream.
+template<typename T>
+inline std::vector<T> read_compact_array(Readable &readable, const ReadObjectFunction<T> &read_function) {
+        std::uint32_t n = read_unsigned_varint(readable);
+        if (n == 0) {
+                return {};
+        }
+        std::vector<T> arr;
+        for (arr.reserve(--n); n > 0; n--) {
+                arr.push_back(read_function(readable));
         }
         return arr;
 }
