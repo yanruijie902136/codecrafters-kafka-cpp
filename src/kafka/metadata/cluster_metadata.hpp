@@ -18,6 +18,9 @@ public:
                 return cluster_metadata;
         }
 
+        // Looks up a topic's name. Throws runtime error on unknown topic IDs.
+        std::string lookup_topic_name(const Uuid &topic_id) const;
+
         // Looks up a topic's ID. Throws runtime error on unknown topic names.
         Uuid lookup_topic_id(const std::string &name) const;
 
@@ -25,6 +28,7 @@ public:
         std::vector<std::int32_t> lookup_partitions(const Uuid &topic_id) const;
 
 private:
+        std::map<Uuid, std::string> ids_to_names_;
         std::map<std::string, Uuid> names_to_ids_;
         std::map<Uuid, std::vector<std::int32_t>> ids_to_partitions_;
 

@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include "kafka/metadata/record_header.hpp"
 #include "kafka/protocol/readable.hpp"
 #include "kafka/protocol/writable.hpp"
 
@@ -20,7 +19,7 @@ public:
                 offset_delta_ = read_varint(readable);
                 read_key(readable);
                 read_value(readable);
-                headers_ = read_compact_array<RecordHeader>(readable);
+                read_headers(readable);
         }
 
         void write(Writable &writable) const {
@@ -30,7 +29,7 @@ public:
                 write_varint(writable, offset_delta_);
                 write_key(writable);
                 write_value(writable);
-                write_compact_array(writable, headers_);
+                write_headers(writable);
         }
 
         const std::vector<unsigned char> &value() const {
@@ -43,7 +42,6 @@ private:
         std::int64_t timestamp_delta_;
         std::int32_t offset_delta_;
         std::vector<unsigned char> value_;
-        std::vector<RecordHeader> headers_;
 
         void read_key(Readable &readable) {
                 if (read_varint(readable) >= 0) {
@@ -64,6 +62,16 @@ private:
         void write_value(Writable &writable) const {
                 write_varint(writable, value_.size());
                 writable.write(value_.data(), value_.size());
+        }
+
+        void read_headers(Readable &readable) {
+                if (read_unsigned_varint(readable) != 0) {
+                        throw std::runtime_error("unexpected headers");
+                }
+        }
+
+        void write_headers(Writable &writable) const {
+                write_unsigned_varint(writable, 0);
         }
 };
 

@@ -1,5 +1,6 @@
 #include "kafka/handlers/fetch_request_handler.hpp"
 #include "kafka/metadata/cluster_metadata.hpp"
+#include "kafka/metadata/record_batch.hpp"
 #include "kafka/protocol/error_code.hpp"
 #include "kafka/requests/fetch_request.hpp"
 #include "kafka/requests/fetch_response.hpp"
@@ -62,6 +63,12 @@ PartitionData FetchRequestHandler::read_topic_partition(const Uuid &topic_id, st
 
         partition_data.set_partition_index(partition_id);
         partition_data.set_error_code(ErrorCode::NONE);
+
+        auto &cluster_metadata = ClusterMetadata::instance();
+        std::string topic_name = cluster_metadata.lookup_topic_name(topic_id);
+
+        auto record_batches = read_record_batches(topic_name, partition_id);
+        partition_data.set_records(std::move(record_batches));
 
         return partition_data;
 }

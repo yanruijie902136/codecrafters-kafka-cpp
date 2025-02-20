@@ -9,7 +9,7 @@
 
 namespace kafka {
 
-BytesIO::BytesIO(const char *path) : pos_(0) {
+BytesIO::BytesIO(const std::string &path) : pos_(0) {
         std::ifstream file(path);
         std::stringstream ss;
         ss << file.rdbuf();

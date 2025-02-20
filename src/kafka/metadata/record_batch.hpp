@@ -64,6 +64,9 @@ private:
         std::vector<Record> records_;
 };
 
+// Reads record batches from a log file.
+std::vector<RecordBatch> read_record_batches(const std::string &topic_name, std::int32_t partition_id);
+
 }
 
 #endif

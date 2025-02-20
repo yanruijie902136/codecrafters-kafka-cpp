@@ -17,7 +17,7 @@ public:
         explicit BytesIO(std::vector<unsigned char> data) : data_(std::move(data)), pos_(0) {}
 
         // Initialize with a file's entire contents.
-        explicit BytesIO(const char *path);
+        explicit BytesIO(const std::string &path);
 
         // Initialize with `size` bytes read from a file descriptor.
         BytesIO(int fildes, std::size_t size);
