@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <err.h>
@@ -36,9 +37,18 @@ static int create_server_socket() {
         return server_socket;
 }
 
+static void send_int32(int client_socket, std::int32_t n) {
+        n = htonl(n);
+        write(client_socket, &n, sizeof(n));
+}
+
 static void handle_client(int client_socket) {
         for ( ; ; ) {
+                char buffer[1024];
+                read(client_socket, buffer, sizeof(buffer));
 
+                send_int32(client_socket, 0);
+                send_int32(client_socket, 7);
         }
 }
 
