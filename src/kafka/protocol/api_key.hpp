@@ -9,6 +9,7 @@
 namespace kafka {
 
 enum class ApiKey : std::int16_t {
+        FETCH = 1,
         API_VERSIONS = 18,
         DESCRIBE_TOPIC_PARTITIONS = 75,
 };

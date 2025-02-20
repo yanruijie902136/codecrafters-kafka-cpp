@@ -20,6 +20,7 @@ std::unique_ptr<Response> ApiVersionsRequestHandler::build_response_body(const R
         }
 
         response.set_api_keys({
+                {ApiKey::FETCH, 16, 16},
                 {ApiKey::API_VERSIONS, 4, 4},
                 {ApiKey::DESCRIBE_TOPIC_PARTITIONS, 0, 0},
         });
