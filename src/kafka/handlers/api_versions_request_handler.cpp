@@ -1,4 +1,5 @@
 #include "kafka/handlers/api_versions_request_handler.hpp"
+#include "kafka/protocol/api_key.hpp"
 #include "kafka/protocol/error_code.hpp"
 #include "kafka/requests/api_versions_response.hpp"
 
@@ -20,6 +21,7 @@ std::unique_ptr<Response> ApiVersionsRequestHandler::build_response_body(const R
 
         response.set_api_keys({
                 {ApiKey::API_VERSIONS, 4, 4},
+                {ApiKey::DESCRIBE_TOPIC_PARTITIONS, 0, 0},
         });
 
         response.set_throttle_time_ms(0);

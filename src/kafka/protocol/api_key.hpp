@@ -10,6 +10,7 @@ namespace kafka {
 
 enum class ApiKey : std::int16_t {
         API_VERSIONS = 18,
+        DESCRIBE_TOPIC_PARTITIONS = 75,
 };
 
 // Reads an ApiKey from a byte stream.
