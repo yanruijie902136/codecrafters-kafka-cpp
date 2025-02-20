@@ -1,4 +1,5 @@
 #include "kafka/handlers/fetch_request_handler.hpp"
+#include "kafka/metadata/cluster_metadata.hpp"
 #include "kafka/protocol/error_code.hpp"
 #include "kafka/requests/fetch_request.hpp"
 #include "kafka/requests/fetch_response.hpp"
@@ -30,10 +31,39 @@ std::unique_ptr<Response> FetchRequestHandler::build_response_body(const Request
 FetchableTopicResponse FetchRequestHandler::process_fetch_topic(const FetchTopic &fetch_topic) {
         FetchableTopicResponse topic_response;
 
-        topic_response.set_topic_id(fetch_topic.topic_id());
-        topic_response.set_partitions({{0, ErrorCode::UNKNOWN_TOPIC_ID}});
+        const Uuid &topic_id = fetch_topic.topic_id();
+        topic_response.set_topic_id(topic_id);
+
+        // Check the topic's existence.
+        auto &cluster_metadata = ClusterMetadata::instance();
+        std::vector<std::int32_t> partition_ids;
+        try {
+                partition_ids = cluster_metadata.lookup_partitions(topic_id);
+        } catch (...) {
+                std::vector<PartitionData> partitions(1);
+                partitions[0].set_partition_index(0);
+                partitions[0].set_error_code(ErrorCode::UNKNOWN_TOPIC_ID);
+                topic_response.set_partitions(std::move(partitions));
+                return topic_response;
+        }
+
+        // Read the topic's partitions.
+        std::vector<PartitionData> partitions;
+        for (std::int32_t partition_id : partition_ids) {
+                partitions.push_back(read_topic_partition(topic_id, partition_id));
+        }
+        topic_response.set_partitions(std::move(partitions));
 
         return topic_response;
+}
+
+PartitionData FetchRequestHandler::read_topic_partition(const Uuid &topic_id, std::int32_t partition_id) {
+        PartitionData partition_data;
+
+        partition_data.set_partition_index(partition_id);
+        partition_data.set_error_code(ErrorCode::NONE);
+
+        return partition_data;
 }
 
 }

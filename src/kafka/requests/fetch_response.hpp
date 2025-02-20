@@ -28,8 +28,6 @@ private:
 
 class PartitionData {
 public:
-        PartitionData(std::int32_t partition_index, ErrorCode error_code) : partition_index_(partition_index), error_code_(error_code) {}
-
         void write(Writable &writable) const {
                 write_int32(writable, partition_index_);
                 write_error_code(writable, error_code_);
@@ -40,6 +38,21 @@ public:
                 write_int32(writable, preferred_read_replica_);
                 write_compact_array(writable, records_);
                 write_tagged_fields(writable);
+        }
+
+        // Sets the partition index.
+        void set_partition_index(std::int32_t partition_index) {
+                partition_index_ = partition_index;
+        }
+
+        // Sets the error code, or 0 if there was no fetch error.
+        void set_error_code(ErrorCode error_code) {
+                error_code_ = error_code;
+        }
+
+        // Sets the record data.
+        void set_records(std::vector<RecordBatch> records) {
+                records_ = std::move(records);
         }
 
 private:

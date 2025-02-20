@@ -28,12 +28,13 @@ std::unique_ptr<Response> DescribeTopicPartitionsRequestHandler::build_response_
 
 ResponseTopic DescribeTopicPartitionsRequestHandler::process_topic_request(const TopicRequest &topic_request) {
         ResponseTopic response_topic;
-        response_topic.set_name(topic_request.name());
 
+        const std::string &topic_name = topic_request.name();
+        response_topic.set_name(topic_name);
+
+        auto &cluster_metadata = ClusterMetadata::instance();
         try {
-                auto &cluster_metadata = ClusterMetadata::instance();
-
-                Uuid topic_id = cluster_metadata.lookup_topic_id(topic_request.name());
+                Uuid topic_id = cluster_metadata.lookup_topic_id(topic_name);
                 response_topic.set_topic_id(topic_id);
 
                 std::vector<ResponsePartition> partitions;
