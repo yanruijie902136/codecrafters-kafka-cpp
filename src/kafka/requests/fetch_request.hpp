@@ -23,6 +23,11 @@ public:
                 read_tagged_fields(readable);
         }
 
+        // The partition index.
+        std::int32_t partition() const {
+                return partition_;
+        }
+
 private:
         std::int32_t partition_;
         std::int32_t current_leader_epoch_;
@@ -43,6 +48,11 @@ public:
         // The unique topic ID.
         const Uuid &topic_id() const {
                 return topic_id_;
+        }
+
+        // The partitions to fetch.
+        const std::vector<FetchPartition> &partitions() const {
+                return partitions_;
         }
 
 private:

@@ -6,6 +6,7 @@
 #include "kafka/requests/fetch_response.hpp"
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -37,9 +38,9 @@ FetchableTopicResponse FetchRequestHandler::process_fetch_topic(const FetchTopic
 
         // Check the topic's existence.
         auto &cluster_metadata = ClusterMetadata::instance();
-        std::vector<std::int32_t> partition_ids;
+        std::string topic_name;
         try {
-                partition_ids = cluster_metadata.lookup_partitions(topic_id);
+                topic_name = cluster_metadata.lookup_topic_name(topic_id);
         } catch (...) {
                 std::vector<PartitionData> partitions(1);
                 partitions[0].set_partition_index(0);
@@ -50,22 +51,20 @@ FetchableTopicResponse FetchRequestHandler::process_fetch_topic(const FetchTopic
 
         // Read the topic's partitions.
         std::vector<PartitionData> partitions;
-        for (std::int32_t partition_id : partition_ids) {
-                partitions.push_back(read_topic_partition(topic_id, partition_id));
+        for (const auto &fetch_partition : fetch_topic.partitions()) {
+                std::int32_t partition_id = fetch_partition.partition();
+                partitions.push_back(fetch_topic_partition(topic_name, partition_id));
         }
         topic_response.set_partitions(std::move(partitions));
 
         return topic_response;
 }
 
-PartitionData FetchRequestHandler::read_topic_partition(const Uuid &topic_id, std::int32_t partition_id) {
+PartitionData FetchRequestHandler::fetch_topic_partition(const std::string &topic_name, std::int32_t partition_id) {
         PartitionData partition_data;
 
         partition_data.set_partition_index(partition_id);
         partition_data.set_error_code(ErrorCode::NONE);
-
-        auto &cluster_metadata = ClusterMetadata::instance();
-        std::string topic_name = cluster_metadata.lookup_topic_name(topic_id);
 
         auto record_batches = read_record_batches(topic_name, partition_id);
         partition_data.set_records(std::move(record_batches));

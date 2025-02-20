@@ -1,8 +1,9 @@
 #ifndef codecrafters_kafka_handlers_fetch_request_handler_hpp
 #define codecrafters_kafka_handlers_fetch_request_handler_hpp
 
+#include <string>
+
 #include "kafka/handlers/request_handler.hpp"
-#include "kafka/protocol/uuid.hpp"
 #include "kafka/requests/fetch_request.hpp"
 #include "kafka/requests/fetch_response.hpp"
 
@@ -13,7 +14,7 @@ private:
         std::unique_ptr<Response> build_response_body(const Request *request) override;
 
         FetchableTopicResponse process_fetch_topic(const FetchTopic &fetch_topic);
-        PartitionData read_topic_partition(const Uuid &topic_id, std::int32_t partition_id);
+        PartitionData fetch_topic_partition(const std::string &topic_name, std::int32_t partition_id);
 };
 
 }
