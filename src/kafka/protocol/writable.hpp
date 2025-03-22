@@ -74,7 +74,7 @@ inline void write_compact_array(Writable &writable, const std::vector<T> &arr) {
 
 // Writes a COMPACT_ARRAY to a byte stream.
 template<typename T>
-inline void write_compact_array(Writable &writable, const std::vector<T> &arr, const WriteObjectFunction<T> &write_function) {
+inline void write_compact_array(Writable &writable, const std::vector<T> &arr, WriteObjectFunction<T> write_function) {
         write_unsigned_varint(writable, arr.size() + 1);
         for (const T &object : arr) {
                 write_function(writable, object);

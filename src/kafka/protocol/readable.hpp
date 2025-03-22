@@ -84,7 +84,7 @@ inline std::vector<T> read_compact_array(Readable &readable) {
 
 // Reads a COMPACT_ARRAY from a byte stream.
 template<typename T>
-inline std::vector<T> read_compact_array(Readable &readable, const ReadObjectFunction<T> &read_function) {
+inline std::vector<T> read_compact_array(Readable &readable, ReadObjectFunction<T> read_function) {
         std::uint32_t n = read_unsigned_varint(readable);
         if (n == 0) {
                 return {};

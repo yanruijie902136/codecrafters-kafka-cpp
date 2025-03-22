@@ -5,41 +5,33 @@
 #include <stdexcept>
 #include <string>
 
+namespace kafka {
+
 template<typename IntType>
-static IntType network_to_host(IntType n) {
+static IntType read_integer(Readable &readable) {
+        IntType n;
+        readable.read(&n, sizeof(n));
         return std::endian::native == std::endian::big ? n : std::byteswap(n);
 }
 
-namespace kafka {
-
 std::int8_t read_int8(Readable &readable) {
-        std::int8_t n;
-        readable.read(&n, sizeof(n));
-        return n;
+        return read_integer<std::int8_t>(readable);
 }
 
 std::int16_t read_int16(Readable &readable) {
-        std::int16_t n;
-        readable.read(&n, sizeof(n));
-        return network_to_host(n);
+        return read_integer<std::int16_t>(readable);
 }
 
 std::int32_t read_int32(Readable &readable) {
-        std::int32_t n;
-        readable.read(&n, sizeof(n));
-        return network_to_host(n);
+        return read_integer<std::int32_t>(readable);
 }
 
 std::int64_t read_int64(Readable &readable) {
-        std::int64_t n;
-        readable.read(&n, sizeof(n));
-        return network_to_host(n);
+        return read_integer<std::int64_t>(readable);
 }
 
 std::uint32_t read_uint32(Readable &readable) {
-        std::uint32_t n;
-        readable.read(&n, sizeof(n));
-        return network_to_host(n);
+        return read_integer<std::uint32_t>(readable);
 }
 
 std::uint32_t read_unsigned_varint(Readable &readable) {

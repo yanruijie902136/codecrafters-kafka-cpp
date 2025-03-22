@@ -3,12 +3,13 @@
 #include <bit>
 #include <cstdint>
 
-template<typename IntType>
-static IntType host_to_network(IntType n) {
-        return std::endian::native == std::endian::big ? n : std::byteswap(n);
-}
-
 namespace kafka {
+
+template<typename IntType>
+static void write_integer(Writable &writable, IntType n) {
+        n = std::endian::native == std::endian::big ? n : std::byteswap(n);
+        writable.write(&n, sizeof(n));
+}
 
 void write_boolean(Writable &writable, bool b) {
         unsigned char c = b ? 0x01 : 0x00;
@@ -16,27 +17,23 @@ void write_boolean(Writable &writable, bool b) {
 }
 
 void write_int8(Writable &writable, std::int8_t n) {
-        writable.write(&n, sizeof(n));
+        write_integer(writable, n);
 }
 
 void write_int16(Writable &writable, std::int16_t n) {
-        n = host_to_network(n);
-        writable.write(&n, sizeof(n));
+        write_integer(writable, n);
 }
 
 void write_int32(Writable &writable, std::int32_t n) {
-        n = host_to_network(n);
-        writable.write(&n, sizeof(n));
+        write_integer(writable, n);
 }
 
 void write_int64(Writable &writable, std::int64_t n) {
-        n = host_to_network(n);
-        writable.write(&n, sizeof(n));
+        write_integer(writable, n);
 }
 
 void write_uint32(Writable &writable, std::uint32_t n) {
-        n = host_to_network(n);
-        writable.write(&n, sizeof(n));
+        write_integer(writable, n);
 }
 
 void write_unsigned_varint(Writable &writable, std::uint32_t n) {
