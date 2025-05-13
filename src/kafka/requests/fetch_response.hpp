@@ -10,6 +10,7 @@
 #include "kafka/protocol/uuid.hpp"
 #include "kafka/protocol/writable.hpp"
 #include "kafka/requests/response.hpp"
+#include "kafka/utils/bytes_io.hpp"
 
 namespace kafka {
 
@@ -36,7 +37,15 @@ public:
                 write_int64(writable, log_start_offset_);
                 write_compact_array(writable, aborted_transactions_);
                 write_int32(writable, preferred_read_replica_);
-                write_compact_array(writable, records_);
+
+                BytesIO w;
+                for (const auto &record_batch : records_) {
+                    record_batch.write(w);
+                }
+                const auto &compact_records = w.get_value();
+
+                write_unsigned_varint(writable, compact_records.size());
+                writable.write(compact_records.data(), compact_records.size());
                 write_tagged_fields(writable);
         }
 
